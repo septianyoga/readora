@@ -1,0 +1,68 @@
+name: bookreader
+description: "Personal offline PDF reader, seperti Kindle - semua data lokal di device."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.5.1
+
+  # Local database
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+
+  # Local file storage
+  path_provider: ^2.1.4
+
+  # File picking (untuk import PDF)
+  file_picker: ^8.1.2
+
+  # PDF rendering & thumbnail generation
+  pdfx: ^2.6.0
+
+  # Simple key-value settings
+  shared_preferences: ^2.3.2
+
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.5.1
+  equatable: ^2.0.5
+  archive: ^3.6.1
+
+  cupertino_icons: ^1.0.8
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+
+  image: assets/icons/app_icon.png
+
+  android: true
+  ios: true
+
+  android_12:
+    image: assets/icons/app_icon.png
+    color: "#FFFFFF"
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
