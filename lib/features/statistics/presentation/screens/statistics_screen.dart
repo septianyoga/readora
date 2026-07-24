@@ -1,177 +1,109 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../domain/entities/reading_statistics.dart';
+import '../../../reading_goal/presentation/providers/reading_goal_providers.dart';
 import '../providers/statistics_providers.dart';
+import '../widgets/achievements_section.dart';
+import '../widgets/activity_calendar.dart';
+import '../widgets/day_detail_sheet.dart';
+import '../widgets/goal_setup_sheet.dart';
+import '../widgets/overview_cards.dart';
+import '../widgets/period_selector.dart';
+import '../widgets/reading_distribution_section.dart';
+import '../widgets/reading_goal_card.dart';
+import '../widgets/reading_habits_section.dart';
+import '../widgets/reading_trend_chart.dart';
+import '../widgets/top_books_section.dart';
 
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
 
-  String _formatReadTime(int totalSeconds) {
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    if (hours == 0 && minutes == 0) return '0 menit';
-    if (hours == 0) return '$minutes menit';
-    if (minutes == 0) return '$hours jam';
-    return '$hours jam $minutes menit';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(statisticsProvider);
+    final period = ref.watch(selectedPeriodProvider);
+    final dashboardAsync = ref.watch(statisticsDashboardProvider(period));
+    final goalAsync = ref.watch(readingGoalProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Statistics'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(statisticsProvider),
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 12),
+          PeriodSelector(
+            selected: period,
+            onChanged: (p) => ref.read(selectedPeriodProvider.notifier).state = p,
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: dashboardAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(child: Text('Terjadi kesalahan: $error')),
+              data: (dashboard) {
+                return RefreshIndicator(
+                  onRefresh: () async => invalidateAllStatistics(ref),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                    children: [
+                      OverviewCards(dashboard: dashboard),
+                      const SizedBox(height: 16),
+                      ReadingTrendChart(period: period, points: dashboard.trend),
+                      const SizedBox(height: 16),
+                      ReadingGoalCard(
+                        progress: dashboard.goalProgress,
+                        onTapSetGoal: () => showGoalSetupSheet(
+                          context,
+                          current: goalAsync.valueOrNull,
+                          onSave: (goal) {
+                            ref.read(readingGoalProvider.notifier).setGoal(goal);
+                            invalidateAllStatistics(ref);
+                          },
+                          onClear: () {
+                            ref.read(readingGoalProvider.notifier).clearGoal();
+                            invalidateAllStatistics(ref);
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _SectionTitle('Top Books'),
+                      const SizedBox(height: 12),
+                      TopBooksSection(books: dashboard.topBooks),
+                      const SizedBox(height: 16),
+                      ActivityCalendar(
+                        days: dashboard.calendarDays,
+                        onSelectDay: (day) => showDayDetailSheet(context, day),
+                      ),
+                      const SizedBox(height: 16),
+                      ReadingHabitsSection(habits: dashboard.habits),
+                      const SizedBox(height: 16),
+                      ReadingDistributionSection(distribution: dashboard.distribution),
+                      const SizedBox(height: 16),
+                      AchievementsSection(achievements: dashboard.achievements),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: statsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Terjadi kesalahan: $error')),
-        data: (stats) => _StatisticsGrid(
-          stats: stats,
-          formatReadTime: _formatReadTime,
-          onRefresh: () async => ref.invalidate(statisticsProvider),
-        ),
-      ),
     );
   }
 }
 
-/// Grid 2x2 statistik.
-///
-/// SEBELUMNYA pakai `GridView` dengan `childAspectRatio` (dihitung manual
-/// dari text scale) — pendekatan itu rapuh, angkanya sulit pas untuk
-/// semua kombinasi device + font size, dan `FittedBox` yang dipasang
-/// sebagai "pengaman" ternyata tidak pernah aktif karena di dalam
-/// `Column(mainAxisSize: min)` tanpa batas tinggi eksplisit, `FittedBox`
-/// tidak punya box untuk di-"fit"-kan.
-///
-/// SEKARANG: setiap baris dibungkus `IntrinsicHeight`, jadi tinggi baris
-/// otomatis mengikuti card tertinggi di baris itu — card TIDAK PERNAH
-/// dipaksa ke tinggi tertentu, jadi tidak mungkin overflow di ukuran
-/// font berapa pun. Seluruh grid dibungkus `SingleChildScrollView` supaya
-/// kalau suatu saat kontennya lebih tinggi dari layar (misal font sangat
-/// besar di layar kecil), dia scroll — bukan overflow.
-class _StatisticsGrid extends StatelessWidget {
-  final ReadingStatistics stats;
-  final String Function(int) formatReadTime;
-  final Future<void> Function() onRefresh;
+class _SectionTitle extends StatelessWidget {
+  final String title;
 
-  const _StatisticsGrid({
-    required this.stats,
-    required this.formatReadTime,
-    required this.onRefresh,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cards = [
-      _StatCard(
-        icon: Icons.library_books_outlined,
-        label: 'Total books',
-        value: '${stats.totalBooks}',
-      ),
-      _StatCard(
-        icon: Icons.auto_stories_outlined,
-        label: 'Pages read',
-        value: '${stats.pagesRead}',
-      ),
-      _StatCard(
-        icon: Icons.schedule_outlined,
-        label: 'Reading time',
-        value: formatReadTime(stats.totalReadTimeSeconds),
-      ),
-      _StatCard(
-        icon: Icons.local_fire_department_outlined,
-        label: 'Reading streak',
-        value: '${stats.readingStreakDays} hari',
-      ),
-    ];
-
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            _StatRow(left: cards[0], right: cards[1]),
-            const SizedBox(height: 16),
-            _StatRow(left: cards[2], right: cards[3]),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  final Widget left;
-  final Widget right;
-
-  const _StatRow({required this.left, required this.right});
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: left),
-          const SizedBox(width: 16),
-          Expanded(child: right),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _SectionTitle(this.title);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 26),
-            const SizedBox(height: 10),
-            Text(
-              value,
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return Text(
+      title,
+      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }

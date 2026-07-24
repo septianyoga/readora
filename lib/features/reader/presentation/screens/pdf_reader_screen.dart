@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/di/providers.dart';
 import '../../../books/domain/entities/book.dart';
@@ -61,6 +62,13 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
   @override
   void initState() {
     super.initState();
+    // Layar HP biasanya auto-lock dalam hitungan menit (setting sistem,
+    // di luar kontrol app). Untuk halaman panjang yang dibaca tanpa
+    // scroll/swipe lama, itu bikin layar mati sendiri padahal masih
+    // dibaca. Selama di Reader, wakelock dipaksa aktif supaya layar
+    // tetap menyala; otomatis kembali ke perilaku normal begitu keluar
+    // dari Reader (lihat dispose()).
+    WakelockPlus.enable();
     _progressRepository = ref.read(readingProgressRepositoryProvider);
     _currentPage = widget.startPage.clamp(1, widget.book.totalPages).toInt();
     _sessionStartedAt = DateTime.now();
@@ -72,20 +80,26 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
 
   @override
   void dispose() {
+    // Static platform-channel call, tidak menyentuh `ref`/widget tree
+    // sama sekali, jadi aman dipanggil fire-and-forget di sini (beda
+    // kasus dengan bug ref.read sebelumnya).
+    WakelockPlus.disable();
     _saveReadingTime();
     _controller.dispose();
     super.dispose();
   }
 
   void _saveReadingTime() {
-    final elapsedSeconds = DateTime.now().difference(_sessionStartedAt).inSeconds;
-    if (elapsedSeconds <= 0) return;
+    final now = DateTime.now();
     // Fire-and-forget: layar sudah ditutup, tidak perlu menunggu hasilnya.
     // Dipanggil lewat field `_progressRepository` (bukan `ref.read(...)`)
     // karena ini jalan di dalam dispose().
-    _progressRepository.addReadingTime(
+    _progressRepository.logSession(
       bookId: widget.book.id,
-      seconds: elapsedSeconds,
+      startedAt: _sessionStartedAt,
+      endedAt: now,
+      startPage: widget.startPage,
+      endPage: _currentPage,
     );
   }
 

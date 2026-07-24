@@ -12,8 +12,12 @@ import '../../features/notes/data/datasources/note_local_datasource.dart';
 import '../../features/notes/data/repositories/note_repository_impl.dart';
 import '../../features/notes/domain/repositories/note_repository.dart';
 import '../../features/reader/data/datasources/reading_progress_local_datasource.dart';
+import '../../features/reader/data/datasources/reading_session_local_datasource.dart';
 import '../../features/reader/data/repositories/reading_progress_repository_impl.dart';
 import '../../features/reader/domain/repositories/reading_progress_repository.dart';
+import '../../features/reading_goal/data/datasources/reading_goal_local_datasource.dart';
+import '../../features/reading_goal/data/repositories/reading_goal_repository_impl.dart';
+import '../../features/reading_goal/domain/repositories/reading_goal_repository.dart';
 import '../../features/settings/data/datasources/settings_local_datasource.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
@@ -43,10 +47,20 @@ final readingProgressLocalDataSourceProvider =
   return ReadingProgressLocalDataSource(dbHelper: dbHelper);
 });
 
+final readingSessionLocalDataSourceProvider =
+    Provider<ReadingSessionLocalDataSource>((ref) {
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return ReadingSessionLocalDataSource(dbHelper: dbHelper);
+});
+
 final readingProgressRepositoryProvider =
     Provider<ReadingProgressRepository>((ref) {
   final dataSource = ref.watch(readingProgressLocalDataSourceProvider);
-  return ReadingProgressRepositoryImpl(localDataSource: dataSource);
+  final sessionDataSource = ref.watch(readingSessionLocalDataSourceProvider);
+  return ReadingProgressRepositoryImpl(
+    localDataSource: dataSource,
+    sessionDataSource: sessionDataSource,
+  );
 });
 
 final bookRepositoryProvider = Provider<BookRepository>((ref) {
@@ -78,12 +92,26 @@ final noteRepositoryProvider = Provider<NoteRepository>((ref) {
   return NoteRepositoryImpl(localDataSource: dataSource);
 });
 
+final readingGoalLocalDataSourceProvider = Provider<ReadingGoalLocalDataSource>((ref) {
+  final dbHelper = ref.watch(databaseHelperProvider);
+  return ReadingGoalLocalDataSource(dbHelper: dbHelper);
+});
+
+final readingGoalRepositoryProvider = Provider<ReadingGoalRepository>((ref) {
+  final dataSource = ref.watch(readingGoalLocalDataSourceProvider);
+  return ReadingGoalRepositoryImpl(localDataSource: dataSource);
+});
+
 final statisticsRepositoryProvider = Provider<StatisticsRepository>((ref) {
   final bookDataSource = ref.watch(bookLocalDataSourceProvider);
   final progressDataSource = ref.watch(readingProgressLocalDataSourceProvider);
+  final sessionDataSource = ref.watch(readingSessionLocalDataSourceProvider);
+  final goalRepository = ref.watch(readingGoalRepositoryProvider);
   return StatisticsRepositoryImpl(
     bookDataSource: bookDataSource,
     progressDataSource: progressDataSource,
+    sessionDataSource: sessionDataSource,
+    goalRepository: goalRepository,
   );
 });
 

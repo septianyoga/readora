@@ -51,7 +51,7 @@ class SettingsScreen extends ConsumerWidget {
 
     await ref.read(settingsProvider.notifier).clearReadingHistory();
     ref.invalidate(bookLibraryProvider);
-    ref.invalidate(statisticsProvider);
+    invalidateAllStatistics(ref);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -178,27 +178,34 @@ class SettingsScreen extends ConsumerWidget {
               ListTile(
                 title: const Text('Default reading mode'),
                 subtitle: Text(_readingModeLabel(settings.defaultReadingMode)),
-                trailing: SegmentedButton<ReadingMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ReadingMode.light,
-                      label: Text('Light'),
-                    ),
-                    ButtonSegment(
-                      value: ReadingMode.dark,
-                      label: Text('Dark'),
-                    ),
-                    ButtonSegment(
-                      value: ReadingMode.sepia,
-                      label: Text('Sepia'),
-                    ),
-                  ],
-                  selected: {settings.defaultReadingMode},
-                  onSelectionChanged: (selection) => ref
-                      .read(settingsProvider.notifier)
-                      .setDefaultReadingMode(selection.first),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<ReadingMode>(
+                    segments: const [
+                      ButtonSegment(
+                        value: ReadingMode.light,
+                        label: Text('Light'),
+                      ),
+                      ButtonSegment(
+                        value: ReadingMode.dark,
+                        label: Text('Dark'),
+                      ),
+                      ButtonSegment(
+                        value: ReadingMode.sepia,
+                        label: Text('Sepia'),
+                      ),
+                    ],
+                    selected: {settings.defaultReadingMode},
+                    onSelectionChanged: (selection) => ref
+                        .read(settingsProvider.notifier)
+                        .setDefaultReadingMode(selection.first),
+                  ),
                 ),
               ),
+              const SizedBox(height: 8),
               ListTile(
                 title: const Text('Font size'),
                 subtitle: Text('${settings.fontSize.toStringAsFixed(0)} pt'),

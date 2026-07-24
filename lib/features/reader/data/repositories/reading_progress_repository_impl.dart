@@ -1,13 +1,17 @@
 import '../../domain/entities/reading_progress.dart';
 import '../../domain/repositories/reading_progress_repository.dart';
 import '../datasources/reading_progress_local_datasource.dart';
+import '../datasources/reading_session_local_datasource.dart';
 
 class ReadingProgressRepositoryImpl implements ReadingProgressRepository {
   final ReadingProgressLocalDataSource _localDataSource;
+  final ReadingSessionLocalDataSource _sessionDataSource;
 
   ReadingProgressRepositoryImpl({
     ReadingProgressLocalDataSource? localDataSource,
-  }) : _localDataSource = localDataSource ?? ReadingProgressLocalDataSource();
+    ReadingSessionLocalDataSource? sessionDataSource,
+  })  : _localDataSource = localDataSource ?? ReadingProgressLocalDataSource(),
+        _sessionDataSource = sessionDataSource ?? ReadingSessionLocalDataSource();
 
   ReadingProgress _mapRow(Map<String, dynamic> row) {
     final lastOpenedMillis = row['last_opened_at'] as int?;
@@ -59,16 +63,34 @@ class ReadingProgressRepositoryImpl implements ReadingProgressRepository {
   }
 
   @override
-  Future<void> addReadingTime({
+  Future<void> logSession({
     required String bookId,
-    required int seconds,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    required int startPage,
+    required int endPage,
   }) async {
-    if (seconds <= 0) return;
-    await _localDataSource.incrementReadingTime(bookId, seconds);
+    final durationSeconds = endedAt.difference(startedAt).inSeconds;
+    if (durationSeconds <= 0) return;
+
+    final pagesRead = endPage > startPage ? endPage - startPage : 0;
+
+    await _sessionDataSource.insert(
+      bookId: bookId,
+      startedAt: startedAt.millisecondsSinceEpoch,
+      endedAt: endedAt.millisecondsSinceEpoch,
+      durationSeconds: durationSeconds,
+      startPage: startPage,
+      endPage: endPage,
+      pagesRead: pagesRead,
+    );
+
+    await _localDataSource.incrementReadingTime(bookId, durationSeconds);
   }
 
   @override
-  Future<void> clearAllHistory() {
-    return _localDataSource.clearAll();
+  Future<void> clearAllHistory() async {
+    await _localDataSource.clearAll();
+    await _sessionDataSource.clearAll();
   }
 }

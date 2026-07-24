@@ -1,26 +1,62 @@
 ![Readora Banner](screenshots/banner.png)
 
+<div align="center">
+
+![Flutter](https://img.shields.io/badge/Flutter-3.35-blue?logo=flutter)
+![Dart](https://img.shields.io/badge/Dart-3.x-blue?logo=dart)
+![Platform](https://img.shields.io/badge/Android-12%2B-green?logo=android)
+![Material](https://img.shields.io/badge/Material%203-UI-purple)
+![Offline](https://img.shields.io/badge/Offline-First-orange)
+![License](https://img.shields.io/badge/License-MIT-brightgreen)
+
+</div>
+
 # 📚 Readora
 
-> **Your Personal Offline Reading Companion**
+> **Read. Remember. Continue.**
 
-Readora is a modern offline ebook reader built with **Flutter** that helps you organize your personal PDF library, remember your reading progress, and continue exactly where you left off.
-
-Unlike traditional PDF viewers, Readora focuses on delivering a clean, distraction-free reading experience with automatic reading history, progress tracking, and a beautiful modern interface.
+<p align="center"> Readora is a modern offline ebook reader built with Flutter that transforms PDF reading into a comfortable and intelligent experience. Organize your personal library, continue exactly where you left off, monitor your reading habits through beautiful analytics, and enjoy a distraction-free reading experience — all without an internet connection. </p>
 
 ---
 
 ## ✨ Features
 
-* 📚 Personal offline PDF library
-* 📖 Continue reading from your last page automatically
-* 🔖 Bookmark important pages
-* 📈 Reading statistics
-* 📂 Organize your book collection
-* 🌙 Beautiful reading experience
-* 🎨 Modern Material Design 3 interface
-* 📱 Optimized for Android
-* 🚀 Fully offline — no account required
+### 📚 Smart Library
+
+* Import unlimited PDF books
+* Beautiful library management
+* Book detail page
+* Reading progress tracking
+* Continue reading instantly
+
+### 📖 Premium Reading Experience
+
+* Smooth page transition
+* Automatic last-page history
+* Bookmark important pages
+* Comfortable reading interface
+* Dark mode ready
+
+### 📊 Reading Analytics
+
+* Total Books
+* Pages Read
+* Reading Time
+* Reading Streak
+* Daily / Weekly / Monthly / Yearly statistics
+* Reading activity trend
+* Reading calendar
+* Reading goals
+* Top books
+* Reading habits
+* Reading achievements
+
+### 🔒 Offline First
+
+* No account required
+* No internet connection required
+* Local storage
+* Privacy friendly
 
 ---
 
@@ -48,6 +84,7 @@ Unlike traditional PDF viewers, Readora focuses on delivering a clean, distracti
 * SQLite
 * File Picker
 * PDFX
+* FlChart
 
 ---
 
@@ -62,14 +99,25 @@ lib/
 │   └── utils/
 │
 ├── features/
+│   ├── backup/
+│   ├── bookmarks/
 │   ├── books/
-│   ├── library/
+│   ├── notes/
 │   ├── reader/
-│   ├── statistics/
-│   └── settings/
+│   ├── reading_goal/
+│   ├── settings/
+│   └── statistics/
 │
 └── main.dart
 ```
+
+## 🌟 Why Readora?
+
+Unlike traditional PDF readers, Readora is designed as a personal reading companion rather than just a document viewer.
+
+It remembers your reading journey, tracks your habits, visualizes your progress with beautiful analytics, and helps you build a consistent reading routine.
+
+Whether you're reading programming books, novels, research papers, or self-improvement books, Readora keeps everything organized in one elegant offline experience.
 
 ---
 

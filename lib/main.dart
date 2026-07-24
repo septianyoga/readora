@@ -6,11 +6,11 @@ import 'core/theme/app_theme.dart';
 import 'features/settings/presentation/providers/settings_providers.dart';
 
 void main() {
-  runApp(const ProviderScope(child: BookReaderApp()));
+  runApp(const ProviderScope(child: ReadoraApp()));
 }
 
-class BookReaderApp extends ConsumerWidget {
-  const BookReaderApp({super.key});
+class ReadoraApp extends ConsumerWidget {
+  const ReadoraApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +21,7 @@ class BookReaderApp extends ConsumerWidget {
     final textScale = (settings?.fontSize ?? 16) / 16;
 
     return MaterialApp(
-      title: 'BookReader',
+      title: 'Readora',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

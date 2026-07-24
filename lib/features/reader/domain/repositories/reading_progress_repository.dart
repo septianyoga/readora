@@ -19,11 +19,16 @@ abstract class ReadingProgressRepository {
     required int totalPages,
   });
 
-  /// Menambahkan durasi baca (detik) ke akumulasi total_read_time,
-  /// dipanggil saat user keluar dari reader screen.
-  Future<void> addReadingTime({
+  /// Mencatat satu sesi baca lengkap (dari buka reader sampai ditutup) ke
+  /// tabel `reading_sessions`, sekaligus menambahkan durasinya ke akumulasi
+  /// `total_read_time` di `reading_progress`. Dipanggil sekali saat user
+  /// keluar dari reader screen.
+  Future<void> logSession({
     required String bookId,
-    required int seconds,
+    required DateTime startedAt,
+    required DateTime endedAt,
+    required int startPage,
+    required int endPage,
   });
 
   /// Menghapus seluruh riwayat baca semua buku (dipakai Setting screen).
